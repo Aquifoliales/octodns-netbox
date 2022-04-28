@@ -5,8 +5,11 @@ A [NetBox](https://github.com/digitalocean/netbox) source for [octoDNS](https://
 Based on IP address information managed by NetBox,
 automatically creating A/AAAA records and their corresponding PTR records.
 
-At this time, NetBox does not have a field 'hostname' in IPAddress,
-so we use the 'description' field as a comma-separated list of hostnames (FQDNs).
+NetBox does not support multiple FQDNs within 'dns_name'. To give you the choice,
+which field you like to use, we gave you the parameter 'fieldselector'.
+'dns_name' is the default for NetBox, but previously the field was not provided
+and is limited. So someone might use 'description'.
+
 
 ### Example config
 
@@ -26,6 +29,7 @@ providers:
     class: octodns_netbox.NetboxSource
     url: https://ipam.example.com/api
     token: env/NETBOX_TOKEN
+    fieldselector: description
 
   route53:
     class: octodns.provider.route53.Route53Provider

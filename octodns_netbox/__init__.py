@@ -97,17 +97,20 @@ class NetboxSource(BaseSource):
         url: http://localhost:8000/api/
         # API v2 account access token (required)
         token: letmein
+        # Field selector, defaults to 'dns_name', may also be 'description'
+        fieldselector: dns_name
     '''
     SUPPORTS_GEO = False
     SUPPORTS_DYNAMIC = False
     SUPPORTS = set(('A', 'AAAA', 'PTR'))
 
-    def __init__(self, id, url, token, ttl=60):
+    def __init__(self, id, url, token, ttl=60, fieldselector='dns_name'):
         self.log = logging.getLogger('NetboxSource[{}]'.format(id))
         self.log.debug('__init__: id=%s, url=%s, token=***', id, url)
         super(NetboxSource, self).__init__(id)
         self._client = NetboxClient(url, token)
         self.ttl = ttl
+        self.fieldselector = fieldselector
 
         self._ipam_records = []
 
@@ -157,7 +160,7 @@ class NetboxSource(BaseSource):
 
         for ipam_record in self.ipam_records(parent=parent, family=4):
             ip_address = ip_interface(ipam_record['address']).ip
-            description = ipam_record['description']
+            description = ipam_record[self.fieldselector]
 
             if zone_length > 3:
                 _name = '{}.{}'.format(
@@ -200,7 +203,7 @@ class NetboxSource(BaseSource):
 
         for ipam_record in self.ipam_records(parent=parent, family=6):
             ip_address = ip_interface(ipam_record['address']).ip
-            description = ipam_record['description']
+            description = ipam_record[self.fieldselector]
 
             name = zone.hostname_from_fqdn(ip_address.reverse_pointer)
 
@@ -228,7 +231,7 @@ class NetboxSource(BaseSource):
 
         for ipam_record in self.ipam_records(zone):
             ip_address = ip_interface(ipam_record['address']).ip
-            description = ipam_record['description']
+            description = ipam_record[self.fieldselector]
 
             for _fqdn in description.split(','):
                 if is_valid_hostname(_fqdn):
